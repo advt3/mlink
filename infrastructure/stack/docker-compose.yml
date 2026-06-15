@@ -1,0 +1,66 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2.1-alpine
+    container_name: mosquitto-broker
+    volumes:
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ../.persistence/mosquitto/data:/mosquitto/data
+      - ../.persistence/mosquitto/log:/mosquitto/log
+    ports:
+      - "1883:1883"
+    restart: unless-stopped
+
+  victoriametrics:
+    container_name: victoriametrics
+    image: victoriametrics/victoria-metrics:latest
+    ports:
+      - "8428:8428"
+    volumes:
+      - ../.persistence/victoriametrics-data:/storage
+    command:
+      - "--storageDataPath=/storage"
+      - "--httpListenAddr=:8428"
+    restart: unless-stopped
+
+  telegraf:
+    image: telegraf:alpine
+    container_name: telegraf
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/hostfs:ro
+    environment:
+      - HOST_MOUNT_PREFIX=/hostfs
+    depends_on:
+      - mosquitto
+      - victoriametrics
+    restart: unless-stopped
+
+  vmalert:
+    container_name: vmalert
+    image: victoriametrics/vmalert:latest
+    depends_on:
+      - victoriametrics
+      - alertmanager
+    ports:
+      - "8880:8880"
+    volumes:
+      - ./vmalert/rules.yml:/etc/alerts/rules.yml
+    command:
+      - "--datasource.url=http://victoriametrics:8428"
+      - "--notifier.url=http://alertmanager:9093"
+      - "--rule=/etc/alerts/rules.yml"
+    restart: unless-stopped
+
+  alertmanager:
+    container_name: alertmanager
+    image: prom/alertmanager:latest
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - ../.persistence/alertmanager:/alertmanager
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    ports:
+      - "9093:9093"
+    restart: unless-stopped

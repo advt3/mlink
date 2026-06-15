@@ -1,0 +1,29 @@
+groups:
+  - name: SensorAlerts
+    rules:
+      - alert: OpenWindow
+        expr: mqtt_consumer_temperature > 27 and mqtt_consumer_humidity > 60
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Open a window on {{ $labels.address }}"
+          description: 'Temp: {{ $value | printf "%.1f" }}°C, Humidity above 60%'
+
+      - alert: SuddenTemperatureChange
+        expr: abs(changes(mqtt_consumer_temperature[5m])) > 2
+        for: 1m
+        labels:
+          severity: info
+        annotations:
+          summary: "Sudden temperature change on {{ $labels.address }}"
+          description: "Changed by > 2°C in 5m"
+
+      - alert: SensorOffline
+        expr: last_over_time(mqtt_consumer_temperature[1h]) unless last_over_time(mqtt_consumer_temperature[15m])
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Sensor offline: {{ $labels.address }}"
+          description: ""
