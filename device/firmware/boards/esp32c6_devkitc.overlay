@@ -34,4 +34,12 @@ i2s_led: &i2s {
 	status = "okay";
 };
 
+&i2c0 {
+	status = "okay";
+	bme280: bme280@77 {
+		compatible = "bosch,bme280";
+		reg = <0x77>;
+	};
+};
+
 

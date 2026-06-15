@@ -5,6 +5,9 @@ export PATH := $(ZEPHYR_WORKSPACE)/.venv/bin:$(PATH)
 
 APP_DIR ?= $(shell pwd)
 
+.PHONY: build
+build: build-esp32
+
 .PHONY: build-pico
 build-pico:
 	cd $(ZEPHYR_WORKSPACE) && $(WEST) build -p always -b rpi_pico/rp2040/w -d $(APP_DIR)/build $(APP_DIR) -- -DEXTRA_DTC_OVERLAY_FILE=$(APP_DIR)/boards/rpi_pico_rp2040_w.overlay
@@ -25,7 +28,7 @@ flash:
 clean:
 	rm -rf build
 
-SERIAL_DEV ?= $(shell ls /dev/tty.usbmodem5ABA* /dev/tty.usbmodem* /dev/tty.usbserial-* 2>/dev/null | head -n 1)
+SERIAL_DEV ?= $(shell for f in /dev/tty.usbmodem5ABA* /dev/tty.usbmodem* /dev/tty.usbserial-*; do if [ -e "$$f" ]; then echo "$$f"; break; fi; done)
 BAUD ?= 115200
 
 .PHONY: monitor

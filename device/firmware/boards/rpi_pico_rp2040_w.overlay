@@ -1,4 +1,28 @@
+&i2c0 {
+    status = "disabled";
+};
 
+&pinctrl {
+    i2c1_default: i2c1_default {
+        group1 {
+            pinmux = <I2C1_SDA_P26>, <I2C1_SCL_P27>;
+            input-enable;
+            input-schmitt-enable;
+        };
+    };
+};
+
+&i2c1 {
+    status = "okay";
+    clock-frequency = <I2C_BITRATE_STANDARD>;
+    pinctrl-0 = <&i2c1_default>;
+    pinctrl-names = "default";
+
+    bme280: bme280@77 {
+        compatible = "bosch,bme280";
+        reg = <0x77>;
+    };
+};
 
 / {
     leds {

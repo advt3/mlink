@@ -6,14 +6,16 @@ project(device_firmware)
 zephyr_include_directories(include)
 
 # Common sources
-target_sources(app PRIVATE src/main.cpp)
+target_sources(app PRIVATE src/main.cpp src/runner.cpp src/filter.cpp)
 
 # Build-time hardware selection
 dt_alias(has_strip PROPERTY "led-strip")
 dt_alias(has_led   PROPERTY "led0")
+dt_nodelabel(has_bme280 NODELABEL "bme280")
 
 message(STATUS "DEBUG: has_strip='${has_strip}'")
 message(STATUS "DEBUG: has_led='${has_led}'")
+message(STATUS "DEBUG: has_bme280='${has_bme280}'")
 
 if(has_strip)
     message(STATUS "Configuring for LED Strip")
@@ -24,4 +26,12 @@ elseif(has_led)
 else()
     message(STATUS "No LED hardware found. Configuring Mock Status Light")
     target_sources(app PRIVATE src/status_light_noop.cpp)
+endif()
+
+if(has_bme280)
+    message(STATUS "Configuring for BME280 Sensor")
+    target_sources(app PRIVATE src/environment_sensor_bme280.cpp)
+else()
+    message(STATUS "No sensor hardware found. Configuring Mock Sensor")
+    target_sources(app PRIVATE src/environment_sensor_noop.cpp)
 endif()
