@@ -1,0 +1,16 @@
+
+
+/ {
+    leds {
+        compatible = "gpio-leds";
+        tx_led: led_17 {
+            gpios = <&gpio0 17 GPIO_ACTIVE_LOW>;
+            label = "Transmit LED";
+        };
+    };
+
+    aliases {
+        tx-led = &tx_led;
+        led0 = &tx_led;
+    };
+};
