@@ -37,6 +37,7 @@ test:
 coverage:
 	cd $(ZEPHYR_WORKSPACE) && $(WEST) build -p always -b native_sim -d $(APP_DIR)/tests/filter/build $(APP_DIR)/tests/filter -- -DCONFIG_COVERAGE=y
 	$(APP_DIR)/tests/filter/build/zephyr/zephyr.exe
+	find $(APP_DIR)/tests/filter/build -name "*.gcda" ! -path "*/device/firmware/src/*" -delete
 	lcov --capture --directory $(APP_DIR)/tests/filter/build --output-file $(APP_DIR)/tests/filter/build/coverage.info
 	genhtml $(APP_DIR)/tests/filter/build/coverage.info --output-directory $(APP_DIR)/tests/filter/build/coverage-html
 

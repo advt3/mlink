@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+
+jobs:
+  test-firmware:
+    name: Run Firmware Tests
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          path: app
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install Host Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build gperf libsdl2-dev gcc-multilib g++-multilib libusb-1.0-0-dev libudev-dev lcov
+
+      - name: Cache Zephyr Workspace
+        id: cache-zephyr
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/zephyrproject
+          key: zephyr-workspace-${{ runner.os }}-python3.14-v1
+
+      - name: Initialize Zephyr Workspace
+        if: steps.cache-zephyr.outputs.cache-hit != 'true'
+        run: |
+          python3 -m venv $GITHUB_WORKSPACE/zephyrproject/.venv
+          source $GITHUB_WORKSPACE/zephyrproject/.venv/bin/activate
+          pip install --upgrade pip
+          pip install west
+          west init $GITHUB_WORKSPACE/zephyrproject
+          cd $GITHUB_WORKSPACE/zephyrproject
+          west update
+          west zephyr-export
+          pip install -r zephyr/scripts/requirements.txt
+
+      - name: Run Tests and Generate Coverage
+        env:
+          ZEPHYR_TOOLCHAIN_VARIANT: host
+        run: |
+          cd app/device/firmware
+          make coverage ZEPHYR_WORKSPACE=$GITHUB_WORKSPACE/zephyrproject
+
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: app/device/firmware/tests/filter/build/coverage-html/
