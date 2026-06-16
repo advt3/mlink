@@ -8,4 +8,20 @@ config APP_WIFI_PASSWORD
     string "WiFi Password"
     default "Your_Password"
 
+config APP_TELEMETRY_MQTT
+    bool "Enable MQTT Telemetry Publisher"
+    default y
+
+config APP_MQTT_BROKER_IP
+    string "MQTT Broker IP Address"
+    default "127.0.0.1"
+
+config APP_MQTT_BROKER_PORT
+    int "MQTT Broker Port"
+    default 1883
+
+config APP_MQTT_TOPIC
+    string "MQTT Publish Topic"
+    default "sensors/environment"
+
 source "Kconfig.zephyr"

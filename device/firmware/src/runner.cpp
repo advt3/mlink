@@ -2,12 +2,13 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
-LOG_MODULE_DECLARE(blinky, LOG_LEVEL_INF);
+LOG_MODULE_DECLARE(mlink, LOG_LEVEL_INF);
 
-Runner::Runner()
-    : m_state(State::RUNNING), m_last_sample_time_ms(0),
-      m_last_blink_toggle_time_ms(0), m_measure_blink_active(false),
-      m_measure_blink_start_ms(0), m_failure_led_state(false) {}
+Runner::Runner(TelemetryPublisher& publisher)
+    : m_publisher(publisher), m_state(State::RUNNING), m_network_established(false),
+      m_last_sample_time_ms(0), m_last_blink_toggle_time_ms(0),
+      m_measure_blink_active(false), m_measure_blink_start_ms(0),
+      m_failure_led_state(false) {}
 
 bool Runner::initialize() {
   m_state = State::RUNNING;
@@ -72,12 +73,16 @@ void Runner::process_reading(uint32_t now_ms) {
     m_measure_blink_active = true;
     m_measure_blink_start_ms = now_ms;
     m_status_light.set_color(StatusLight::Color::Green());
+
+    if (m_network.is_connected()) {
+      m_publisher.publish(avg_reading);
+    }
   }
 }
 
 Runner::Events Runner::gather_events(uint32_t now_ms) {
   Events events = {
-    .network_ok = m_network.is_connected(),
+    .network_ok = m_network.is_connected() && m_publisher.get_connected(),
     .sensor_sampled = false,
     .sensor_ok = false
   };
@@ -98,10 +103,16 @@ Runner::Events Runner::gather_events(uint32_t now_ms) {
 }
 
 void Runner::evaluate_state(uint32_t now_ms, const Events& events) {
+  if (events.network_ok) {
+    m_network_established = true;
+  }
+
   switch (m_state) {
     case State::RUNNING:
       if (!events.network_ok) {
-        transition_to(State::FAILURE, now_ms, "Network connection lost! Entering failure state");
+        if (m_network_established) {
+          transition_to(State::FAILURE, now_ms, "Network connection lost! Entering failure state");
+        }
       } else if (events.sensor_sampled && !events.sensor_ok) {
         transition_to(State::FAILURE, now_ms, "Sensor read failure! Entering failure state");
       } else if (events.sensor_sampled && events.sensor_ok) {

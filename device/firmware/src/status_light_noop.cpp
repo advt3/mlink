@@ -1,7 +1,7 @@
 #include "status_light.hpp"
 #include <zephyr/logging/log.h>
 
-LOG_MODULE_DECLARE(blinky, LOG_LEVEL_INF);
+LOG_MODULE_DECLARE(mlink, LOG_LEVEL_INF);
 
 bool StatusLight::initialize() {
   LOG_INF("No status light hardware configured. Using mock status light.");

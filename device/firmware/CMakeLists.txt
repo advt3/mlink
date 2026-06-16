@@ -9,18 +9,24 @@ project(device_firmware)
 
 message(STATUS "DEBUG: EXTRA_CONF_FILE='${EXTRA_CONF_FILE}'")
 
-
 zephyr_include_directories(include)
 
 # Common sources
 target_sources(app PRIVATE src/main.cpp src/runner.cpp src/filter.cpp)
 
+# Network Configuration
 if(CONFIG_WIFI)
     message(STATUS "Configuring for Wi-Fi Connection")
     target_sources(app PRIVATE src/network_connection_wifi.cpp)
 else()
     message(STATUS "No Wi-Fi Configured. Configuring Mock Network Connection")
     target_sources(app PRIVATE src/network_connection_noop.cpp)
+endif()
+
+# Telemetry Configuration
+if(CONFIG_APP_TELEMETRY_MQTT)
+    message(STATUS "Configuring for MQTT Telemetry")
+    target_sources(app PRIVATE src/mqtt_publisher.cpp)
 endif()
 
 # Build-time hardware selection
@@ -32,6 +38,7 @@ message(STATUS "DEBUG: has_strip='${has_strip}'")
 message(STATUS "DEBUG: has_led='${has_led}'")
 message(STATUS "DEBUG: has_bme280='${has_bme280}'")
 
+# Board options
 if(has_strip)
     message(STATUS "Configuring for LED Strip")
     target_sources(app PRIVATE src/status_light_strip.cpp)

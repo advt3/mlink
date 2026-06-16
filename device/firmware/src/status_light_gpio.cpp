@@ -4,7 +4,7 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/logging/log.h>
 
-LOG_MODULE_DECLARE(blinky, LOG_LEVEL_INF);
+LOG_MODULE_DECLARE(mlink, LOG_LEVEL_INF);
 
 #define LED_NODE DT_ALIAS(led0)
 

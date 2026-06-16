@@ -4,7 +4,7 @@
 #include <zephyr/drivers/led_strip.h>
 #include <zephyr/logging/log.h>
 
-LOG_MODULE_DECLARE(blinky, LOG_LEVEL_INF);
+LOG_MODULE_DECLARE(mlink, LOG_LEVEL_INF);
 
 #define STRIP_NODE DT_ALIAS(led_strip)
 

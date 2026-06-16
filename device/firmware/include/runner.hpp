@@ -4,6 +4,7 @@
 #include "environment_sensor.hpp"
 #include "filter.hpp"
 #include "network_connection.hpp"
+#include "telemetry_publisher.hpp"
 #include <cstdint>
 
 class Runner {
@@ -13,7 +14,7 @@ public:
         FAILURE
     };
 
-    Runner();
+    Runner(TelemetryPublisher& publisher);
     bool initialize();
     void run();
 
@@ -22,7 +23,9 @@ private:
     EnvironmentSensor m_sensor;
     ReadingFilter m_filter;
     NetworkConnection m_network;
+    TelemetryPublisher& m_publisher;
     State m_state;
+    bool m_network_established;
 
     // Task intervals and last run timestamps
     uint32_t m_last_sample_time_ms;
