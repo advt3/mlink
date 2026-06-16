@@ -44,6 +44,8 @@ jobs:
           pip install -r zephyr/scripts/requirements.txt
 
       - name: Run Tests
+        env:
+          ZEPHYR_TOOLCHAIN_VARIANT: host
         run: |
           cd app/device/firmware
           make test ZEPHYR_WORKSPACE=$GITHUB_WORKSPACE/zephyrproject
