@@ -22,6 +22,11 @@ bool Runner::initialize() {
     m_state = State::FAILURE;
   }
 
+  if (!m_network.initialize()) {
+    LOG_ERR("Failed to initialize network connection");
+    m_state = State::FAILURE;
+  }
+
   uint32_t now_ms = k_uptime_get_32();
   // Set last sample time to trigger an immediate sample on startup
   m_last_sample_time_ms = now_ms - 30000;
@@ -35,49 +40,92 @@ bool Runner::initialize() {
   return true;
 }
 
+void Runner::transition_to(State new_state, uint32_t now_ms, const char* reason) {
+  if (reason && reason[0] != '\0') {
+    if (new_state == State::FAILURE) {
+      LOG_ERR("%s", reason);
+    } else {
+      LOG_INF("%s", reason);
+    }
+  }
+
+  m_state = new_state;
+
+  if (m_state == State::FAILURE) {
+    m_last_blink_toggle_time_ms = now_ms;
+    m_failure_led_state = true;
+    m_status_light.set_color(StatusLight::Color{0x1F, 0, 0});
+  } else if (m_state == State::RUNNING) {
+    m_status_light.set_color(StatusLight::Color::Black());
+  }
+}
+
+void Runner::process_reading(uint32_t now_ms) {
+  SensorReading avg_reading;
+  if (m_filter.check_and_get_reading(avg_reading, now_ms)) {
+    LOG_INF("Averaged Reading (2m): Temp = %.2f C, Hum = %.2f %%, Press "
+            "= %.2f hPa [Network: %s]",
+            avg_reading.temperature, avg_reading.humidity,
+            avg_reading.pressure,
+            m_network.is_connected() ? "CONNECTED" : "DISCONNECTED");
+
+    m_measure_blink_active = true;
+    m_measure_blink_start_ms = now_ms;
+    m_status_light.set_color(StatusLight::Color::Green());
+  }
+}
+
+Runner::Events Runner::gather_events(uint32_t now_ms) {
+  Events events = {
+    .network_ok = m_network.is_connected(),
+    .sensor_sampled = false,
+    .sensor_ok = false
+  };
+
+  // Sample every 3 seconds
+  if (now_ms - m_last_sample_time_ms >= 3000) {
+    m_last_sample_time_ms = now_ms;
+    events.sensor_sampled = true;
+
+    SensorReading reading;
+    events.sensor_ok = m_sensor.read(reading);
+    if (events.sensor_ok) {
+      m_filter.add_sample(reading);
+    }
+  }
+
+  return events;
+}
+
+void Runner::evaluate_state(uint32_t now_ms, const Events& events) {
+  switch (m_state) {
+    case State::RUNNING:
+      if (!events.network_ok) {
+        transition_to(State::FAILURE, now_ms, "Network connection lost! Entering failure state");
+      } else if (events.sensor_sampled && !events.sensor_ok) {
+        transition_to(State::FAILURE, now_ms, "Sensor read failure! Entering failure state");
+      } else if (events.sensor_sampled && events.sensor_ok) {
+        process_reading(now_ms);
+      }
+      break;
+
+    case State::FAILURE:
+      if (events.network_ok && events.sensor_sampled && events.sensor_ok) {
+        transition_to(State::RUNNING, now_ms, "System recovered from failure state");
+        process_reading(now_ms);
+      }
+      break;
+  }
+}
+
 void Runner::run() {
   LOG_INF("Runner loop started");
 
   while (true) {
     uint32_t now_ms = k_uptime_get_32();
 
-    // 1. Sensor Task: Sample every 30 seconds
-    if (now_ms - m_last_sample_time_ms >= 3000) {
-      m_last_sample_time_ms = now_ms;
-
-      SensorReading reading;
-      if (m_sensor.read(reading)) {
-        m_filter.add_sample(reading);
-
-        if (m_state == State::FAILURE) {
-          LOG_INF("System recovered from failure state");
-          m_state = State::RUNNING;
-          m_status_light.set_color(StatusLight::Color::Black());
-        }
-
-        SensorReading avg_reading;
-        if (m_filter.check_and_get_reading(avg_reading, now_ms)) {
-          LOG_INF("Averaged Reading (2m): Temp = %.2f C, Hum = %.2f %%, Press "
-                  "= %.2f hPa",
-                  avg_reading.temperature, avg_reading.humidity,
-                  avg_reading.pressure);
-
-          m_measure_blink_active = true;
-          m_measure_blink_start_ms = now_ms;
-          m_status_light.set_color(StatusLight::Color::Green());
-        }
-      } else {
-        if (m_state != State::FAILURE) {
-          LOG_ERR("Sensor read failure! Entering failure state");
-          m_state = State::FAILURE;
-          m_last_blink_toggle_time_ms = now_ms;
-          m_failure_led_state = true;
-          m_status_light.set_color(StatusLight::Color{0x1F, 0, 0});
-        }
-      }
-    }
-
-    // 2. LED Signaling Task
+    Events events = gather_events(now_ms);
+    evaluate_state(now_ms, events);
     update_led_state(now_ms);
 
     k_msleep(10);
@@ -86,7 +134,7 @@ void Runner::run() {
 
 void Runner::update_led_state(uint32_t now_ms) {
   if (m_state == State::FAILURE) {
-    // Toggle LED every 500ms
+    // Toggle LED every 500ms (red blink for failure / disconnection)
     if (now_ms - m_last_blink_toggle_time_ms >= 500) {
       m_failure_led_state = !m_failure_led_state;
       m_last_blink_toggle_time_ms = now_ms;
@@ -98,7 +146,7 @@ void Runner::update_led_state(uint32_t now_ms) {
       }
     }
   } else {
-    // Normal RUNNING state
+    // Normal RUNNING state with active network connection
     if (m_measure_blink_active) {
       if (now_ms - m_measure_blink_start_ms >= 2000) {
         m_measure_blink_active = false;

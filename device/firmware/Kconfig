@@ -1,0 +1,11 @@
+mainmenu "Environment Metrics Firmware"
+
+config APP_WIFI_SSID
+    string "WiFi SSID"
+    default "Your_SSID"
+
+config APP_WIFI_PASSWORD
+    string "WiFi Password"
+    default "Your_Password"
+
+source "Kconfig.zephyr"

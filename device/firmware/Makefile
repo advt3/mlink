@@ -10,7 +10,7 @@ build: build-esp32
 
 .PHONY: build-pico
 build-pico:
-	cd $(ZEPHYR_WORKSPACE) && $(WEST) build -p always -b rpi_pico/rp2040/w -d $(APP_DIR)/build $(APP_DIR) -- -DEXTRA_DTC_OVERLAY_FILE=$(APP_DIR)/boards/rpi_pico_rp2040_w.overlay
+	cd $(ZEPHYR_WORKSPACE) && $(WEST) build -p always -b rpi_pico/rp2040/w -d $(APP_DIR)/build $(APP_DIR) -- -DEXTRA_DTC_OVERLAY_FILE=$(APP_DIR)/boards/rpi_pico_rp2040_w.overlay -DCONF_FILE="prj.conf;boards/rpi_pico_rp2040_w.conf"
 
 .PHONY: build-pico-basic
 build-pico-basic:
@@ -27,6 +27,18 @@ flash:
 .PHONY: clean
 clean:
 	rm -rf build
+
+.PHONY: test
+test:
+	cd $(ZEPHYR_WORKSPACE) && $(WEST) build -p always -b native_sim -d $(APP_DIR)/tests/filter/build $(APP_DIR)/tests/filter
+	$(APP_DIR)/tests/filter/build/zephyr/zephyr.exe
+
+.PHONY: coverage
+coverage:
+	cd $(ZEPHYR_WORKSPACE) && $(WEST) build -p always -b native_sim -d $(APP_DIR)/tests/filter/build $(APP_DIR)/tests/filter -- -DCONFIG_COVERAGE=y
+	$(APP_DIR)/tests/filter/build/zephyr/zephyr.exe
+	lcov --capture --directory $(APP_DIR)/tests/filter/build --output-file $(APP_DIR)/tests/filter/build/coverage.info
+	genhtml $(APP_DIR)/tests/filter/build/coverage.info --output-directory $(APP_DIR)/tests/filter/build/coverage-html
 
 SERIAL_DEV ?= $(shell for f in /dev/tty.usbmodem5ABA* /dev/tty.usbmodem* /dev/tty.usbserial-*; do if [ -e "$$f" ]; then echo "$$f"; break; fi; done)
 BAUD ?= 115200

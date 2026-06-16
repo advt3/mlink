@@ -1,0 +1,6 @@
+# WiFi and Network Configuration Overlay
+# Copy this file to "local.conf" and configure with your local credentials.
+# Do NOT commit local.conf to version control.
+
+CONFIG_APP_WIFI_SSID="your-ssid-here"
+CONFIG_APP_WIFI_PASSWORD="your-password-here"

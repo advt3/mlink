@@ -1,12 +1,27 @@
 cmake_minimum_required(VERSION 3.20.0)
 
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/local.conf")
+    set(EXTRA_CONF_FILE "${CMAKE_CURRENT_SOURCE_DIR}/local.conf" CACHE INTERNAL "Local configuration overlay")
+endif()
+
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(device_firmware)
+
+message(STATUS "DEBUG: EXTRA_CONF_FILE='${EXTRA_CONF_FILE}'")
+
 
 zephyr_include_directories(include)
 
 # Common sources
 target_sources(app PRIVATE src/main.cpp src/runner.cpp src/filter.cpp)
+
+if(CONFIG_WIFI)
+    message(STATUS "Configuring for Wi-Fi Connection")
+    target_sources(app PRIVATE src/network_connection_wifi.cpp)
+else()
+    message(STATUS "No Wi-Fi Configured. Configuring Mock Network Connection")
+    target_sources(app PRIVATE src/network_connection_noop.cpp)
+endif()
 
 # Build-time hardware selection
 dt_alias(has_strip PROPERTY "led-strip")
