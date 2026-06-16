@@ -16,14 +16,22 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.14"
 
       - name: Install Host Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build gperf libsdl2-dev gcc-multilib g++-multilib
 
+      - name: Cache Zephyr Workspace
+        id: cache-zephyr
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/zephyrproject
+          key: zephyr-workspace-${{ runner.os }}-python3.14-v1
+
       - name: Initialize Zephyr Workspace
+        if: steps.cache-zephyr.outputs.cache-hit != 'true'
         run: |
           python3 -m venv $GITHUB_WORKSPACE/zephyrproject/.venv
           source $GITHUB_WORKSPACE/zephyrproject/.venv/bin/activate
