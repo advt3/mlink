@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+
+jobs:
+  test-firmware:
+    name: Run Firmware Tests
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          path: app
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Host Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build gperf libsdl2-dev gcc-multilib g++-multilib
+
+      - name: Initialize Zephyr Workspace
+        run: |
+          python3 -m venv $GITHUB_WORKSPACE/zephyrproject/.venv
+          source $GITHUB_WORKSPACE/zephyrproject/.venv/bin/activate
+          pip install --upgrade pip
+          pip install west
+          west init $GITHUB_WORKSPACE/zephyrproject
+          cd $GITHUB_WORKSPACE/zephyrproject
+          west update
+          west zephyr-export
+          pip install -r zephyr/scripts/requirements.txt
+
+      - name: Run Tests
+        run: |
+          cd app/device/firmware
+          make test ZEPHYR_WORKSPACE=$GITHUB_WORKSPACE/zephyrproject
