@@ -21,7 +21,7 @@ jobs:
       - name: Install Host Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build gperf libsdl2-dev gcc-multilib g++-multilib
+          sudo apt-get install -y cmake ninja-build gperf libsdl2-dev gcc-multilib g++-multilib libusb-1.0-0-dev libudev-dev
 
       - name: Cache Zephyr Workspace
         id: cache-zephyr
