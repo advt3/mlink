@@ -21,7 +21,7 @@ jobs:
       - name: Install Host Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build gperf libsdl2-dev gcc-multilib g++-multilib libusb-1.0-0-dev libudev-dev
+          sudo apt-get install -y cmake ninja-build gperf libsdl2-dev gcc-multilib g++-multilib libusb-1.0-0-dev libudev-dev lcov
 
       - name: Cache Zephyr Workspace
         id: cache-zephyr
@@ -43,9 +43,15 @@ jobs:
           west zephyr-export
           pip install -r zephyr/scripts/requirements.txt
 
-      - name: Run Tests
+      - name: Run Tests and Generate Coverage
         env:
           ZEPHYR_TOOLCHAIN_VARIANT: host
         run: |
           cd app/device/firmware
-          make test ZEPHYR_WORKSPACE=$GITHUB_WORKSPACE/zephyrproject
+          make coverage ZEPHYR_WORKSPACE=$GITHUB_WORKSPACE/zephyrproject
+
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: app/device/firmware/tests/filter/build/coverage-html/
