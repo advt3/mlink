@@ -7,6 +7,8 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.mqtts.address=:8883"
+      - "--log.level=INFO"
+      - "--accesslog=true"
       # Let's Encrypt ACME Configuration
       - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
       - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"

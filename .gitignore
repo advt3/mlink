@@ -11,3 +11,7 @@
 **/*.info
 **/coverage-html/
 .vscode/settings.json
+**/mosquitto/config/certs/
+device/firmware/src/ca_cert.inc
+*.tfstate
+*.tfstate.backup

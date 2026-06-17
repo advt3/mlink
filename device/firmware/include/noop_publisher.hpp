@@ -3,7 +3,8 @@
 
 class NoOpPublisher {
 public:
-    NoOpPublisher() = default;
+    NoOpPublisher(const char* = nullptr) {}
+    bool initialize() { return true; }
     bool start() { return true; }
     void stop() {}
     bool publish(const SensorReading&) { return true; }

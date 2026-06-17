@@ -6,7 +6,8 @@ export PATH := $(ZEPHYR_WORKSPACE)/.venv/bin:$(PATH)
 APP_DIR ?= $(shell pwd)
 
 .PHONY: build
-build: build-esp32
+build:
+	cd $(ZEPHYR_WORKSPACE) && $(WEST) build -d $(APP_DIR)/build $(APP_DIR)
 
 .PHONY: build-pico
 build-pico:

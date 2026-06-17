@@ -77,7 +77,7 @@ push:
 		./ \
 		$(SSH_USER)@$(VM_IP):~/containers/
 	# Create remote persistence directory and sync password file
-	ssh -i $(SSH_KEY) -o IdentitiesOnly=yes $(SSH_USER)@$(VM_IP) "mkdir -p ~/.persistence"
+	ssh -i $(SSH_KEY) -o IdentitiesOnly=yes $(SSH_USER)@$(VM_IP) "mkdir -p ~/.persistence && sudo rm -f ~/.persistence/password_file"
 	rsync -avz -e "ssh -i $(SSH_KEY) -o IdentitiesOnly=yes" \
 		../.persistence/password_file \
 		$(SSH_USER)@$(VM_IP):~/.persistence/password_file
@@ -97,7 +97,10 @@ deploy: push
 		 echo 'LE_EMAIL=$(LE_EMAIL)' >> ~/containers/.env && \
 		 echo 'MQTT_USER=$(MQTT_USER)' >> ~/containers/.env && \
 		 echo 'MQTT_PASS=$(MQTT_PASS)' >> ~/containers/.env && \
-		 sudo chmod 644 ~/.persistence/password_file && \
+		 sudo chmod 600 ~/.persistence/password_file && \
+		 sudo chown 1883:1883 ~/.persistence/password_file && \
+		 sudo mkdir -p ~/.persistence/mosquitto/data ~/.persistence/mosquitto/log && \
+		 sudo chown -R 1883:1883 ~/.persistence/mosquitto && \
 		 cd ~/containers && \
 		 sudo docker-compose -f docker-compose.cloud.yml down && \
 		 sudo docker-compose -f docker-compose.cloud.yml up -d"

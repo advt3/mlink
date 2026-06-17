@@ -73,7 +73,7 @@ resource "google_compute_instance" "mqtt_vm" {
   }
 
   metadata = {
-    ssh-keys       = data.external.ssh_key.result.key != "" ? "${data.external.ssh_key.result.username}:${data.external.ssh_key.result.key}" : null
+    ssh-keys       = data.external.ssh_key.result.key != "" ? "${data.external.ssh_key.result.username}:${data.external.ssh_key.result.key}" : ""
     startup-script = <<-EOT
       #!/bin/bash
       # Configure 512MB Swap
