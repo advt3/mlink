@@ -16,7 +16,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.14"
+          python-version: "3.12"
+          cache: "pip"
 
       - name: Install Host Dependencies
         run: |
@@ -27,21 +28,28 @@ jobs:
         id: cache-zephyr
         uses: actions/cache@v4
         with:
-          path: ${{ github.workspace }}/zephyrproject
-          key: zephyr-workspace-${{ runner.os }}-python3.14-v1
+          path: |
+            ${{ github.workspace }}/zephyrproject
+            !${{ github.workspace }}/zephyrproject/.venv
+          key: zephyr-workspace-${{ runner.os }}-v3
+
+      - name: Install West
+        run: pip install west
 
       - name: Initialize Zephyr Workspace
         if: steps.cache-zephyr.outputs.cache-hit != 'true'
         run: |
-          python3 -m venv $GITHUB_WORKSPACE/zephyrproject/.venv
-          source $GITHUB_WORKSPACE/zephyrproject/.venv/bin/activate
-          pip install --upgrade pip
-          pip install west
           west init $GITHUB_WORKSPACE/zephyrproject
           cd $GITHUB_WORKSPACE/zephyrproject
           west update
           west zephyr-export
-          pip install -r zephyr/scripts/requirements.txt
+
+      - name: Setup Virtual Environment
+        run: |
+          python3 -m venv $GITHUB_WORKSPACE/zephyrproject/.venv
+          $GITHUB_WORKSPACE/zephyrproject/.venv/bin/pip install --upgrade pip
+          $GITHUB_WORKSPACE/zephyrproject/.venv/bin/pip install west
+          $GITHUB_WORKSPACE/zephyrproject/.venv/bin/pip install -r $GITHUB_WORKSPACE/zephyrproject/zephyr/scripts/requirements.txt
 
       - name: Run Tests and Generate Coverage
         env:

@@ -24,6 +24,8 @@ int main() {
     }
   }
 
+  LOG_INF("Device MAC: %s", client_id);
+
   TelemetryPublisher publisher(client_id);
   Runner runner(publisher);
   if (!runner.initialize()) {

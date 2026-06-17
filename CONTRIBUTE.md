@@ -1,6 +1,6 @@
 # Contributing
 
-This document outlines how to contribute to the Environment Metrics Link project.
+This document outlines how to contribute to the MetricLink project.
 
 ## Development Workflow
 

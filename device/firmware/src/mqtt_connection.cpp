@@ -42,10 +42,10 @@ void MqttConnection::mqtt_evt_handler(struct mqtt_client *const client,
     if (evt->param.connack.return_code != 0) {
       LOG_ERR("MQTT connection refused: %d", evt->param.connack.return_code);
       conn->set_connected(false);
-    } else {
+      } else {
       LOG_INF("MQTT client successfully connected!");
       conn->set_connected(true);
-    }
+      }
     break;
 
   case MQTT_EVT_DISCONNECT:

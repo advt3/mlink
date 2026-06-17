@@ -2,88 +2,118 @@
 
 Instructions to set up, configure, build, flash, and monitor the Zephyr-based firmware for the Raspberry Pi Pico W and ESP32-C6 DevKit.
 
+For a comprehensive guide on setting up Zephyr with C++ on the Raspberry Pi Pico, refer to the [starting point guide](https://advt3.com/posts/zephyr-freestanding-cpp-rpi-pico-v4/).
+
 ---
 
-## 1. Credentials Configuration (1Password)
+## 1. Prerequisites
+
+### Zephyr Environment
+Ensure you have the **Zephyr RTOS** environment installed. 
+
+### Installing & Updating Zephyr Modules (Drivers/Blobs)
+If you are missing the platform-specific HALs or binary blobs for WiFi/Bluetooth drivers, run the following commands from your Zephyr workspace directory:
+
+#### ESP32 Targets (hal_espressif)
+```bash
+west update hal_espressif
+west blobs fetch hal_espressif
+```
+
+#### Raspberry Pi Pico W Targets (CYW43439 & hal_infineon)
+```bash
+west update cmsis_6 hal_rpi_pico hal_infineon mbedtls tf-psa-crypto
+west blobs fetch hal_infineon
+```
+
+### ESP32-C6 Target Tooling
+Building for the ESP32-C6 requires `esptool`.
+
+1. **Install Dependencies**:
+   ```bash
+   west packages pip --install
+   ```
+
+2. **Environment Path**: The provided `Makefile` automatically adds the venv to your path. If using `west` directly, ensure your virtual environment is active.
+
+---
+
+## 2. Credentials Configuration
 
 To prevent WiFi and MQTT credentials from being committed to Git, they are configured in a Git-ignored `device/firmware/local.conf` overlay. 
 
-You can read the deployed cloud broker credentials dynamically from 1Password and populate the file:
-
 ```bash
-# 1. Initialize local.conf with WiFi settings (clears old configurations if run again)
 cd device/firmware
 cat <<EOF > local.conf
 # Local configuration overlay (ignored by Git)
 CONFIG_APP_WIFI_SSID="your-wifi-ssid"
 CONFIG_APP_WIFI_PASSWORD="your-wifi-password"
 EOF
-
-# 2. Retrieve the cloud broker domain, username, and password from 1Password
-export MQTT_DOMAIN=$(op read "op://Automation/environment-measures-mqtt-auth/domain")
-export MQTT_USER=$(op read "op://Automation/environment-measures-mqtt-auth/username")
-export MQTT_PASS=$(op read "op://Automation/environment-measures-mqtt-auth/password")
-
-# 3. Append them to local.conf
-echo "CONFIG_APP_MQTT_BROKER_HOST=\"$MQTT_DOMAIN\"" >> local.conf
-echo "CONFIG_APP_MQTT_BROKER_PORT=8883" >> local.conf
-echo "CONFIG_APP_MQTT_USERNAME=\"$MQTT_USER\"" >> local.conf
-echo "CONFIG_APP_MQTT_PASSWORD=\"$MQTT_PASS\"" >> local.conf
 ```
+
+Refer to the [Infrastructure & Operations Guide](./03-infrastructure.md) for instructions on retrieving the cloud broker credentials from 1Password.
 
 ---
 
-## 2. Compile & Flash
+## 3. Build & Flash
 
-Ensure your Zephyr virtual environment is active:
+### 1. Download/Extract the Root CA
+Before building, make sure the CA certificate is formatted into `device/firmware/src/ca_cert.inc`:
+
 ```bash
-source ~/zephyrproject/.venv/bin/activate
-source ~/zephyrproject/zephyr/zephyr-env.sh
+# Method A: Let's Encrypt Root CA
+cd infrastructure/stack
+make get-root-ca
+
+# Method B: Extract from live broker
+openssl s_client -showcerts -connect <YOUR_BROKER_DOMAIN>:8883 </dev/null 2>/dev/null | openssl x509 -outform PEM | awk '{print "\"" $0 "\\n\""}' > device/firmware/src/ca_cert.inc
 ```
 
-### 1. Download/Extract the Root CA or Server Certificate
-Before building, make sure the CA certificate is formatted into the source directory (`device/firmware/src/ca_cert.inc`). You can do this in two ways:
-
-- **Method A: Let's Encrypt Root CA (Default)**
-  Downloads the Let's Encrypt `ISRG Root X1` certificate and formats it:
-  ```bash
-  cd infrastructure/stack
-  make get-root-ca
-  ```
-
-- **Method B: Extract directly from the live broker**
-  If using custom or self-signed certs, extract and format the certificate directly from the broker (run from repository root):
-  ```bash
-  openssl s_client -showcerts -connect metrics.advt3.com:8883 </dev/null 2>/dev/null | openssl x509 -outform PEM | awk '{print "\"" $0 "\\n\""}' > device/firmware/src/ca_cert.inc
-  ```
-
-### 2. Build ESP32 Firmware
-From the `device/firmware` directory, compile the binary for the ESP32-C6:
+### 2. Build Firmware
 ```bash
 cd device/firmware
-make build-esp32
+make build-pico   # For Raspberry Pi Pico W
+make build-esp32  # For ESP32-C6 DevKitC
 ```
 
-### 3. Build Pico W Firmware
-Compile the binary for the Raspberry Pi Pico W:
-```bash
-cd device/firmware
-make build-pico
-```
+### 3. Flash & Deploy
 
-### 4. Flash the Firmware
-Connect the target device (ESP32 or Pico W) and run:
+#### ESP32-C6 DevKitC
+Connect via USB and flash:
 ```bash
 make flash
 ```
 
+#### Raspberry Pi Pico W
+1. Connect via USB while holding **BOOTSEL**.
+2. Mount the Pico as a mass storage device.
+3. Copy `build/zephyr/zephyr.uf2` to the Pico drive.
+
 ---
 
-## 3. Monitoring Console Output
+## 4. Monitoring Console Output
 
-To watch the live connection logs and verify that the firmware is successfully establishing a secure TLS connection to the cloud broker and sending MQTT messages:
-
+To watch the live connection logs:
 ```bash
 make monitor
 ```
-*(Uses `tio` to connect to the automatically detected serial debug console).*
+
+---
+
+## 5. Unit Testing & Code Coverage
+
+Tests run locally on the host computer via Zephyr's `native_sim` architecture.
+
+> [!IMPORTANT]
+> `native_sim` is only supported on **Linux**. For macOS/Windows, use a Linux VM or Docker container.
+
+### Run Unit Tests
+```bash
+make test
+```
+
+### Generate Coverage Reports
+```bash
+make coverage
+```
+Report location: `tests/filter/build/coverage-html/index.html`
