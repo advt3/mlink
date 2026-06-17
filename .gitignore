@@ -10,3 +10,4 @@
 **/tests/**/build/
 **/*.info
 **/coverage-html/
+.vscode/settings.json
