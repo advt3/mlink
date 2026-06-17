@@ -70,7 +70,7 @@ To compile the trusted Let's Encrypt Root CA certificate into the firmware:
    - **Method B: Extract directly from the live broker**
      If you need to fetch and format the exact certificate chain/leaf from the running broker directly (e.g. for testing custom or self-signed certs), run this `openssl` command from the repository root:
      ```bash
-     openssl s_client -showcerts -connect metrics.advt3.com:8883 </dev/null 2>/dev/null | openssl x509 -outform PEM | awk '{print "\"" $0 "\\n\""}' > device/firmware/src/ca_cert.inc
+     openssl s_client -showcerts -connect <YOUR_BROKER_DOMAIN>:8883 </dev/null 2>/dev/null | openssl x509 -outform PEM | awk '{print "\"" $0 "\\n\""}' > device/firmware/src/ca_cert.inc
      ```
 2. **Configure local overrides**:
    Copy `device/firmware/local.conf.example` to `device/firmware/local.conf` and specify the custom broker IP/Host and credentials (this file is ignored by Git).
@@ -126,7 +126,7 @@ ssh -i ~/.ssh/google_compute_engine -N \
   -L 8428:localhost:8428 \
   -L 8880:localhost:8880 \
   -L 9093:localhost:9093 \
-  $(id -un)@metrics.advt3.com
+  $(id -un)@<YOUR_VM_IP_OR_DOMAIN>
 ```
 
 Once established, open the UIs in your local web browser:

@@ -9,6 +9,8 @@ make monitor
 ```
 *Note: You can override the device path if needed: `make monitor SERIAL_DEV=/dev/tty.usbmodem123`*
 
+For detailed hardware setup instructions (wiring, debug probe), refer to [docs/01-hardware-setup.md](../../docs/01-hardware-setup.md).
+
 ## Prerequisites
 
 ### Installing & Updating Zephyr Modules (Drivers/Blobs)
