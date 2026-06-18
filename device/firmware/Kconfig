@@ -12,8 +12,8 @@ config APP_TELEMETRY_MQTT
     bool "Enable MQTT Telemetry Publisher"
     default y
 
-config APP_MQTT_BROKER_IP
-    string "MQTT Broker IP Address"
+config APP_MQTT_BROKER_HOST
+    string "MQTT Broker Hostname/IP"
     default "127.0.0.1"
 
 config APP_MQTT_BROKER_PORT
@@ -23,5 +23,20 @@ config APP_MQTT_BROKER_PORT
 config APP_MQTT_TOPIC
     string "MQTT Publish Topic"
     default "sensors/environment"
+
+config APP_MQTT_TLS_VERIFY_REQUIRED
+    bool "MQTT TLS Verification Required"
+    default n
+    help
+      Enable server certificate verification. Defaults to 'n' for local dev
+      due to Pico W real-time clock validation constraints.
+
+config APP_MQTT_USERNAME
+    string "MQTT Username"
+    default "device_user"
+
+config APP_MQTT_PASSWORD
+    string "MQTT Password"
+    default "device_pass"
 
 source "Kconfig.zephyr"

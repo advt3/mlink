@@ -4,5 +4,7 @@
 
 CONFIG_APP_WIFI_SSID="your-ssid-here"
 CONFIG_APP_WIFI_PASSWORD="your-password-here"
-CONFIG_APP_MQTT_BROKER_IP="your-mqtt-broker-ip-here"
+CONFIG_APP_MQTT_BROKER_HOST="your-mqtt-broker-host-here"
+CONFIG_APP_MQTT_USERNAME="your-mqtt-username-here"
+CONFIG_APP_MQTT_PASSWORD="your-mqtt-password-here"
 

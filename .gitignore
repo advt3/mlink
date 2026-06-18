@@ -10,3 +10,8 @@
 **/tests/**/build/
 **/*.info
 **/coverage-html/
+.vscode/settings.json
+**/mosquitto/config/certs/
+*.tfstate
+*.tfstate.backup
+**ca_cert.inc*

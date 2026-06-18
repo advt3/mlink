@@ -26,7 +26,7 @@ endif()
 # Telemetry Configuration
 if(CONFIG_APP_TELEMETRY_MQTT)
     message(STATUS "Configuring for MQTT Telemetry")
-    target_sources(app PRIVATE src/mqtt_publisher.cpp)
+    target_sources(app PRIVATE src/mqtt_publisher.cpp src/mqtt_connection.cpp)
 endif()
 
 # Build-time hardware selection

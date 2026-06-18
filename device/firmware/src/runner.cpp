@@ -28,6 +28,11 @@ bool Runner::initialize() {
     m_state = State::FAILURE;
   }
 
+  if (!m_publisher.initialize()) {
+    LOG_ERR("Failed to initialize telemetry publisher");
+    m_state = State::FAILURE;
+  }
+
   uint32_t now_ms = k_uptime_get_32();
   // Set last sample time to trigger an immediate sample on startup
   m_last_sample_time_ms = now_ms - 30000;
@@ -36,6 +41,7 @@ bool Runner::initialize() {
   if (m_state == State::FAILURE) {
     m_failure_led_state = true;
     m_status_light.set_color(StatusLight::Color{0x1F, 0, 0});
+    return false;
   }
 
   return true;
@@ -131,6 +137,11 @@ void Runner::evaluate_state(uint32_t now_ms, const Events& events) {
 
 void Runner::run() {
   LOG_INF("Runner loop started");
+
+  if (!m_publisher.start()) {
+    LOG_ERR("Failed to start telemetry publisher");
+    transition_to(State::FAILURE, k_uptime_get_32(), "Failed to start telemetry publisher");
+  }
 
   while (true) {
     uint32_t now_ms = k_uptime_get_32();
