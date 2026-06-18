@@ -33,7 +33,7 @@ flowchart TD
     Persistence -- "Query/Alert" --> Monitoring
 ```
 
-- **Field**: Firmware built on Zephyr RTOS for Raspberry Pi Pico W and ESP32. It handles hardware abstraction and secure data delivery.
+- **Field**: Firmware built on Zephyr RTOS for Raspberry Pi Pico W and ESP32. It handles hardware abstraction and secure data delivery, accounting for silicon-specific constraints like RP2040 flash execution and the requirement for external Secure Elements to maintain a Hardware Root of Trust.
 - **Transport**: Standard MQTT with TLS encryption for secure data movement over public networks.
 - **Infrastructure**: A containerized stack on Google Cloud Platform, provisioned via Terraform, featuring high-performance storage and alerting.
 
