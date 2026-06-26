@@ -1,0 +1,16 @@
+{
+  "broker": "tcps://metrics.advt3.com:8883",
+  "client_id": "desk-link-widget",
+  "username": "admin",
+  "password": "K3Uh_w.ZGEf2T4DK.G@_KAGbC_Wj",
+  "topic": "sensors/environment",
+  "tls_skip_verify": true,
+  "ui": {
+    "font_size": 20,
+    "text_color": "#FFFFFF",
+    "width": 600,
+    "height": 180,
+    "x": 0,
+    "y": 0
+  }
+}
