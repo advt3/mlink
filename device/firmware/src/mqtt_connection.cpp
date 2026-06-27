@@ -28,8 +28,9 @@ static int register_credentials(void) {
 #endif
 
 // Define a dedicated thread space for the MQTT network runner
-K_THREAD_STACK_DEFINE(mqtt_worker_stack, 4096);
+K_THREAD_STACK_DEFINE(mqtt_worker_stack, 8192);
 static struct k_thread mqtt_worker_data;
+
 
 void MqttConnection::mqtt_evt_handler(struct mqtt_client *const client,
                                       const struct mqtt_evt *evt) {

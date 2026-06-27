@@ -19,7 +19,7 @@ build-pico-basic:
 
 .PHONY: build-esp32
 build-esp32:
-	cd $(ZEPHYR_WORKSPACE) && $(WEST) build -p always -b esp32c6_devkitc/esp32c6/hpcore -d $(APP_DIR)/build $(APP_DIR) -- -DEXTRA_DTC_OVERLAY_FILE=$(APP_DIR)/boards/esp32c6_devkitc.overlay -DCONF_FILE="prj.conf;boards/esp32c6_devkitc.conf"
+	cd $(ZEPHYR_WORKSPACE) && $(WEST) build -p always -b esp32c6_devkitc/esp32c6/hpcore -d $(APP_DIR)/build $(APP_DIR) --sysbuild -- -DEXTRA_DTC_OVERLAY_FILE=$(APP_DIR)/boards/esp32c6_devkitc.overlay -DCONF_FILE="prj.conf;boards/esp32c6_devkitc.conf"
 
 .PHONY: flash
 flash:
@@ -52,3 +52,13 @@ monitor:
 		exit 1; \
 	fi
 	tio -b $(BAUD) $(SERIAL_DEV)
+
+.PHONY: mender
+mender:
+	@mkdir -p build
+	mender-artifact write module-image \
+		--type zephyr-image \
+		--device-type esp32c6_devkitc \
+		--artifact-name firmware-v$$(date +%Y%m%d) \
+		--output build/firmware.mender \
+		--file build/firmware/zephyr/zephyr.signed.bin

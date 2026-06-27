@@ -33,6 +33,17 @@ bool Runner::initialize() {
     m_state = State::FAILURE;
   }
 
+#ifdef CONFIG_MENDER_MCU_CLIENT
+  if (m_state != State::FAILURE) {
+    if (!m_mender_client.initialize()) {
+      LOG_ERR("Failed to initialize Mender client");
+      m_state = State::FAILURE;
+    }
+  }
+#endif
+
+
+
   uint32_t now_ms = k_uptime_get_32();
   // Set last sample time to trigger an immediate sample on startup
   m_last_sample_time_ms = now_ms - 30000;
@@ -142,6 +153,12 @@ void Runner::run() {
     LOG_ERR("Failed to start telemetry publisher");
     transition_to(State::FAILURE, k_uptime_get_32(), "Failed to start telemetry publisher");
   }
+
+#ifdef CONFIG_MENDER_MCU_CLIENT
+  m_mender_client.start();
+#endif
+
+
 
   while (true) {
     uint32_t now_ms = k_uptime_get_32();

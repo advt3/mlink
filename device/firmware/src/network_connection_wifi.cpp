@@ -9,8 +9,9 @@
 LOG_MODULE_REGISTER(network_connection, LOG_LEVEL_INF);
 
 // Background thread configuration
-#define CONNECTION_THREAD_STACK_SIZE 2048
+#define CONNECTION_THREAD_STACK_SIZE 4096
 #define CONNECTION_THREAD_PRIORITY 7
+
 
 static K_THREAD_STACK_DEFINE(conn_thread_stack, CONNECTION_THREAD_STACK_SIZE);
 static struct k_thread conn_thread_data;
@@ -18,8 +19,8 @@ static struct k_thread conn_thread_data;
 static struct net_mgmt_event_callback wifi_cb;
 static struct net_mgmt_event_callback ipv4_cb;
 
-static bool g_wifi_connected = false;
-static bool g_ipv4_assigned = false;
+static volatile bool g_wifi_connected = false;
+static volatile bool g_ipv4_assigned = false;
 static bool g_should_run = true;
 
 static void wifi_mgmt_handler(struct net_mgmt_event_callback *cb,

@@ -7,6 +7,11 @@
 #include "telemetry_publisher.hpp"
 #include <cstdint>
 
+#ifdef CONFIG_MENDER_MCU_CLIENT
+#include "mender_client.hpp"
+#endif
+
+
 class Runner {
 public:
     enum class State {
@@ -17,6 +22,8 @@ public:
     Runner(TelemetryPublisher& publisher);
     bool initialize();
     void run();
+    bool is_network_connected() const { return m_network.is_connected(); }
+
 
 private:
     StatusLight m_status_light;
@@ -26,6 +33,12 @@ private:
     TelemetryPublisher& m_publisher;
     State m_state;
     bool m_network_established;
+
+#ifdef CONFIG_MENDER_MCU_CLIENT
+    MenderClient m_mender_client;
+#endif
+
+
 
     // Task intervals and last run timestamps
     uint32_t m_last_sample_time_ms;

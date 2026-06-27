@@ -14,6 +14,11 @@ zephyr_include_directories(include)
 # Common sources
 target_sources(app PRIVATE src/main.cpp src/runner.cpp src/filter.cpp)
 
+if(CONFIG_MENDER_MCU_CLIENT)
+    target_sources(app PRIVATE src/mender_client.cpp)
+endif()
+
+
 # Network Configuration
 if(CONFIG_WIFI)
     message(STATUS "Configuring for Wi-Fi Connection")
