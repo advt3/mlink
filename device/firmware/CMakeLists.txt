@@ -57,3 +57,7 @@ else()
     message(STATUS "No sensor hardware found. Configuring Mock Sensor")
     target_sources(app PRIVATE src/environment_sensor_noop.cpp)
 endif()
+
+# Workaround for Zephyr C++ compilation issue in net/ethernet.h (Issue #106984)
+target_compile_options(app PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-fpermissive>)
+
